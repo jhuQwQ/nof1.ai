@@ -17,7 +17,7 @@
  */
 
 /**
- * 从 Gate.io 同步账户资金并重新初始化数据库
+ * 从 Binance Futures 同步账户资金并重新初始化数据库（脚本名称保留 Gate 以兼容历史流程）
  */
 import "dotenv/config";
 import { createClient } from "@libsql/client";
@@ -34,9 +34,9 @@ const logger = createPinoLogger({
 
 async function syncFromGate() {
   try {
-    logger.info("🔄 从 Gate.io 同步账户信息...");
+    logger.info("🔄 从 Binance 同步账户信息...");
     
-    // 1. 连接 Gate.io 获取当前账户余额
+    // 1. 连接 Binance 获取当前账户余额
     const gateClient = createGateClient();
     const account = await gateClient.getFuturesAccount();
     
@@ -44,7 +44,7 @@ async function syncFromGate() {
     const availableBalance = Number.parseFloat(account.available || "0");
     const unrealizedPnl = Number.parseFloat(account.unrealisedPnl || "0");
     
-    logger.info(`\n📊 Gate.io 当前账户状态:`);
+    logger.info(`\n📊 Binance 当前账户状态:`);
     logger.info(`   总资产: ${currentBalance} USDT`);
     logger.info(`   可用资金: ${availableBalance} USDT`);
     logger.info(`   未实现盈亏: ${unrealizedPnl} USDT`);
@@ -98,7 +98,7 @@ async function syncFromGate() {
     await client.executeMultiple(CREATE_TABLES_SQL);
     logger.info("✅ 表创建完成");
     
-    // 7. 插入初始账户记录（使用 Gate.io 的实际资金）
+    // 7. 插入初始账户记录（使用 Binance 的实际资金）
     logger.info(`💰 插入初始资金记录: ${currentBalance} USDT`);
     await client.execute({
       sql: `INSERT INTO account_history 
@@ -219,4 +219,3 @@ async function syncFromGate() {
 
 // 执行同步
 syncFromGate();
-

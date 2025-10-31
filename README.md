@@ -4,7 +4,7 @@
 
 [![VoltAgent](https://img.shields.io/badge/Framework-VoltAgent-purple.svg)](https://voltagent.dev)
 [![OpenAI Compatible](https://img.shields.io/badge/AI-OpenAI_Compatible-orange.svg)](https://openrouter.ai)
-[![Gate.io](https://img.shields.io/badge/Exchange-Gate.io-00D4AA.svg)](https://www.gate.io)
+[![Binance](https://img.shields.io/badge/Exchange-Binance-F0B90B.svg)](https://www.binance.com)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Node.js](https://img.shields.io/badge/Runtime-Node.js%2020+-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](./LICENSE)
@@ -18,7 +18,7 @@
 
 open-nof1.ai is an AI-powered cryptocurrency automated trading system that deeply integrates large language model intelligence with quantitative trading practices. Built on an Agent framework, the system achieves truly intelligent trading by granting AI complete autonomy in market analysis and trading decisions.
 
-The system follows a **minimal human intervention** design philosophy, abandoning traditional hardcoded trading rules and allowing AI models to autonomously learn and make decisions based on raw market data. It integrates with Gate.io exchange (supporting both testnet and mainnet), provides complete perpetual contract trading capabilities, covers mainstream cryptocurrencies such as BTC, ETH, SOL, and supports full automation from data collection, intelligent analysis, risk management to trade execution.
+The system follows a **minimal human intervention** design philosophy, abandoning traditional hardcoded trading rules and allowing AI models to autonomously learn and make decisions based on raw market data. It integrates with Binance Futures (supporting both testnet and mainnet), provides complete perpetual contract trading capabilities, covers mainstream cryptocurrencies such as BTC, ETH, SOL, and supports full automation from data collection, intelligent analysis, risk management to trade execution.
 
 ![open-nof1.ai](./public/image.png)
 
@@ -56,7 +56,7 @@ The system follows a **minimal human intervention** design philosophy, abandonin
 └─────────┬───────────────────────────────────┬───────────┘
           │                                   │
 ┌─────────┴──────────┐            ┌───────────┴───────────┐
-│    Trading Tools   │            │   Gate.io API Client  │
+│    Trading Tools   │            │ Binance Futures Client│
 │                    │            │                       │
 │ - Market Data      │◄───────────┤ - Order Management    │
 │ - Account Info     │            │ - Position Query      │
@@ -78,7 +78,7 @@ The system follows a **minimal human intervention** design philosophy, abandonin
 |-----------|-----------|---------|
 | Framework | [VoltAgent](https://voltagent.dev) | AI Agent orchestration and management |
 | AI Provider | OpenAI Compatible API | Supports OpenRouter, OpenAI, DeepSeek and other compatible providers |
-| Exchange | [Gate.io](https://www.gate.io) | Cryptocurrency trading (testnet & mainnet) |
+| Exchange | [Binance Futures](https://www.binance.com/en/futures) | Cryptocurrency trading (testnet & mainnet) |
 | Database | LibSQL (SQLite) | Local data persistence |
 | Web Server | Hono | High-performance HTTP framework |
 | Language | TypeScript | Type-safe development |
@@ -109,7 +109,7 @@ The system follows a **minimal human intervention** design philosophy, abandonin
 - **Leverage Range**: 1x to 10x (configurable)
 - **Order Types**: Market orders, stop-loss, take-profit
 - **Position Direction**: Long and short positions
-- **Real-time Execution**: Sub-second order placement via Gate.io API
+- **Real-time Execution**: Sub-second order placement via Binance Futures API
 
 ### Real-Time Monitoring Interface
 
@@ -174,10 +174,10 @@ INITIAL_BALANCE=2000            # Initial capital in USDT
 # Database
 DATABASE_URL=file:./.voltagent/trading.db
 
-# Gate.io API Credentials (use testnet first!)
-GATE_API_KEY=your_api_key_here
-GATE_API_SECRET=your_api_secret_here
-GATE_USE_TESTNET=true
+# Binance API Credentials (use testnet first!)
+BINANCE_API_KEY=your_api_key_here
+BINANCE_API_SECRET=your_api_secret_here
+BINANCE_USE_TESTNET=true
 
 # AI Model Provider (OpenAI Compatible API)
 OPENAI_API_KEY=your_api_key_here
@@ -189,8 +189,8 @@ AI_MODEL_NAME=deepseek/deepseek-v3.2-exp      # Model name
 - OpenRouter: https://openrouter.ai/keys
 - OpenAI: https://platform.openai.com/api-keys
 - DeepSeek: https://platform.deepseek.com/api_keys
-- Gate.io Testnet: https://www.gate.io/testnet
-- Gate.io Mainnet: https://www.gate.io/myaccount/api_key_manage
+- Binance Futures Testnet: https://testnet.binancefuture.com/en/futures/BTCUSDT
+- Binance API Management: https://www.binance.com/en/my/settings/api-management
 
 ### Database Initialization
 
@@ -225,11 +225,12 @@ open-nof1.ai/
 │   ├── database/
 │   │   ├── init.ts                   # Database initialization logic
 │   │   ├── schema.ts                 # Database schema definitions
-│   │   └── sync-from-gate.ts         # Exchange data synchronization
+│   │   └── sync-from-gate.ts         # Exchange data sync (legacy name, now Binance)
 │   ├── scheduler/
 │   │   └── tradingLoop.ts            # Trading cycle orchestration
 │   ├── services/
-│   │   ├── gateClient.ts             # Gate.io API client wrapper
+│   │   ├── binanceClient.ts          # Binance Futures API client
+│   │   ├── gateClient.ts             # Legacy alias for Binance client
 │   │   └── multiTimeframeAnalysis.ts # Multi-timeframe data aggregator
 │   ├── tools/
 │   │   └── trading/                  # VoltAgent tool implementations
@@ -247,7 +248,7 @@ open-nof1.ai/
 ├── scripts/                          # Operational scripts
 │   ├── init-db.sh                    # Database setup script
 │   ├── kill-port.sh                  # Service shutdown script
-│   └── sync-from-gate.sh             # Data sync script
+│   └── sync-from-gate.sh             # Data sync script (legacy name, now Binance)
 ├── .env                              # Environment configuration
 ├── .voltagent/                       # Data storage directory
 │   └── trading.db                    # SQLite database file
@@ -268,9 +269,9 @@ open-nof1.ai/
 | `MAX_LEVERAGE` | Maximum leverage multiplier | 10 | No |
 | `INITIAL_BALANCE` | Initial capital in USDT | 2000 | No |
 | `DATABASE_URL` | SQLite database file path | file:./.voltagent/trading.db | No |
-| `GATE_API_KEY` | Gate.io API key | - | Yes |
-| `GATE_API_SECRET` | Gate.io API secret | - | Yes |
-| `GATE_USE_TESTNET` | Use testnet environment | true | No |
+| `BINANCE_API_KEY` | Binance API key | - | Yes |
+| `BINANCE_API_SECRET` | Binance API secret | - | Yes |
+| `BINANCE_USE_TESTNET` | Use Binance Futures testnet | true | No |
 | `OPENAI_API_KEY` | OpenAI compatible API key | - | Yes |
 | `OPENAI_BASE_URL` | API base URL | https://openrouter.ai/api/v1 | No |
 | `AI_MODEL_NAME` | Model name | deepseek/deepseek-v3.2-exp | No |
@@ -351,7 +352,7 @@ npm run db:reset
 # Check database status
 npm run db:status
 
-# Sync data from Gate.io
+# Sync data from Binance (legacy script name)
 npm run db:sync
 
 # Sync position data
@@ -534,12 +535,12 @@ npm run trading:start
 
 #### API Credentials Not Configured
 
-**Error**: `GATE_API_KEY and GATE_API_SECRET must be set in environment variables`
+**Error**: `BINANCE_API_KEY and BINANCE_API_SECRET must be set in environment variables`
 
 **Solution**:
 ```bash
 # Verify .env file
-cat .env | grep GATE_API
+cat .env | grep BINANCE_API
 
 # Edit configuration
 nano .env
@@ -651,7 +652,7 @@ Real-time data streaming available for:
 
 ```bash
 # Configure in .env
-GATE_USE_TESTNET=true
+BINANCE_USE_TESTNET=true
 ```
 
 Testnet advantages:
@@ -707,9 +708,9 @@ cp .voltagent/trading.db "$backup_dir/trading-$(date +%Y%m%d-%H%M%S).db"
 nano .env
 
 # 3. Update configuration
-GATE_USE_TESTNET=false
-GATE_API_KEY=your_mainnet_api_key
-GATE_API_SECRET=your_mainnet_api_secret
+BINANCE_USE_TESTNET=false
+BINANCE_API_KEY=your_mainnet_api_key
+BINANCE_API_SECRET=your_mainnet_api_secret
 
 # 4. Restart system
 npm run trading:start
@@ -723,8 +724,8 @@ npm run trading:start
 - [OpenRouter Model Catalog](https://openrouter.ai/models)
 - [OpenAI API Reference](https://platform.openai.com/docs/api-reference)
 - [DeepSeek API Documentation](https://platform.deepseek.com/api-docs/)
-- [Gate.io API Reference](https://www.gate.io/docs/developers/apiv4/)
-- [Gate.io Testnet](https://www.gate.io/testnet)
+- [Binance Futures API Reference](https://binance-docs.github.io/apidocs/futures/en/)
+- [Binance Futures Testnet](https://testnet.binancefuture.com/en/futures/BTCUSDT)
 
 ## Risk Disclaimer
 

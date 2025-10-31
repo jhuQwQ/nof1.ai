@@ -186,8 +186,8 @@ export const openPositionTool = createTool({
       const currentPrice = Number.parseFloat(ticker.last || "0");
       const contractInfo = await client.getContractInfo(contract);
       
-      // Gate.io 永续合约的保证金计算
-      // 注意：Gate.io 使用"张数"作为单位，每张合约代表一定数量的币
+      // Binance 永续合约的保证金计算
+      // 注意：系统以合约步长为单位处理数量（size 表示步长数量）
       // 对于 BTC_USDT: 1张 = 0.0001 BTC
       // 保证金计算：保证金 = (张数 * quantoMultiplier * 价格) / 杠杆
       
@@ -232,7 +232,7 @@ export const openPositionTool = createTool({
       });
       
       //  等待并验证订单状态（带重试）
-      // 增加等待时间，确保 Gate.io API 更新持仓信息
+      // 增加等待时间，确保 Binance API 更新持仓信息
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       //  检查订单状态并获取实际成交价格（最多重试3次）
@@ -314,16 +314,16 @@ export const openPositionTool = createTool({
       //  使用实际成交数量和价格记录到数据库
       const finalQuantity = actualFillSize > 0 ? actualFillSize : Math.abs(size);
       
-      // 计算手续费（Gate.io taker费率 0.05%）
-      // 手续费 = 合约名义价值 * 0.05%
+      // 计算手续费（Binance taker 费率约 0.04%）
+      // 手续费 = 合约名义价值 * 0.04%
       // 合约名义价值 = 张数 * quantoMultiplier * 价格
       const positionValue = finalQuantity * quantoMultiplier * actualFillPrice;
-      const fee = positionValue * 0.0005; // 0.05%
+      const fee = positionValue * 0.0004; // 0.04%
       
       // 记录开仓交易
       // side: 持仓方向（long=做多, short=做空）
       // 实际执行: long开仓=买入(+size), short开仓=卖出(-size)
-      // 映射状态：Gate.io finished -> filled, open -> pending
+      // 映射状态：Binance FILLED -> filled, NEW/PARTIALLY_FILLED -> pending
       const dbStatus = finalOrderStatus === 'finished' ? 'filled' : 'pending';
       
       await dbClient.execute({
@@ -347,8 +347,8 @@ export const openPositionTool = createTool({
       let slOrderId: string | undefined;
       let tpOrderId: string | undefined;
       
-      //  获取持仓信息以获取 Gate.io 返回的强平价
-      // Gate.io API 有延迟，需要等待并重试
+      //  获取持仓信息以获取 Binance 返回的强平价
+      // Binance API 可能有轻微延迟，需要等待并重试
       let liquidationPrice = 0;
       let gatePositionSize = 0;
       let maxRetries = 5;
@@ -375,9 +375,9 @@ export const openPositionTool = createTool({
           retryCount++;
           
           if (retryCount >= maxRetries) {
-            logger.error(`❌ 警告：Gate.io 查询显示持仓为0，但订单状态为 ${finalOrderStatus}`);
+            logger.error(`❌ 警告：Binance 查询显示持仓为0，但订单状态为 ${finalOrderStatus}`);
             logger.error(`订单ID: ${order.id}, 成交数量: ${actualFillSize}, 计算数量: ${finalQuantity}`);
-            logger.error(`可能原因：Gate.io API 延迟或持仓需要更长时间更新`);
+            logger.error(`可能原因：Binance API 延迟或持仓需要更长时间更新`);
           }
         } catch (error) {
           logger.warn(`获取持仓失败（重试${retryCount + 1}/${maxRetries}）: ${error}`);
@@ -385,7 +385,7 @@ export const openPositionTool = createTool({
         }
       }
       
-      // 如果未能从 Gate.io 获取强平价，使用估算公式（仅作为后备）
+      // 如果未能从 Binance 获取强平价，使用估算公式（仅作为后备）
       if (liquidationPrice === 0) {
         liquidationPrice = side === "long" 
           ? actualFillPrice * (1 - 0.9 / leverage)
@@ -497,7 +497,7 @@ export const closePositionTool = createTool({
         };
       }
       
-      //  直接从 Gate.io 获取最新的持仓信息（不依赖数据库）
+      //  直接从 Binance 获取最新的持仓信息（不依赖数据库）
       const allPositions = await client.getPositions();
       const gatePosition = allPositions.find((p: any) => p.contract === contract);
       
@@ -508,7 +508,7 @@ export const closePositionTool = createTool({
         };
       }
       
-      // 从 Gate.io 获取实时数据
+      // 从 Binance 获取实时数据
       const gateSize = Number.parseInt(gatePosition.size || "0");
       const side = gateSize > 0 ? "long" : "short";
       const quantity = Math.abs(gateSize);
@@ -537,7 +537,7 @@ export const closePositionTool = createTool({
       //  获取合约乘数用于计算盈亏和手续费
       const quantoMultiplier = await getQuantoMultiplier(contract);
       
-      // 🔥 不再依赖Gate.io返回的unrealisedPnl，始终手动计算毛盈亏
+      // 🔥 不再依赖交易所返回的 unrealisedPnl，始终手动计算毛盈亏
       // 手动计算盈亏公式：
       // 对于做多：(currentPrice - entryPrice) * quantity * quantoMultiplier
       // 对于做空：(entryPrice - currentPrice) * quantity * quantoMultiplier
@@ -559,7 +559,7 @@ export const closePositionTool = createTool({
       
       logger.info(`平仓 ${symbol} ${side === "long" ? "做多" : "做空"} ${closeSize}张 (入场: ${entryPrice.toFixed(2)}, 当前: ${currentPrice.toFixed(2)})`);
       
-      //  市价单平仓（Gate.io 市价单：price 为 "0"，不设置 tif）
+      //  市价单平仓（Binance 市价单无需设置 price 或 tif）
       const order = await client.placeOrder({
         contract,
         size,
@@ -707,7 +707,7 @@ export const closePositionTool = createTool({
       // 实际执行方向: long平仓=卖出, short平仓=买入
       // pnl: 净盈亏（已扣除手续费）
       // fee: 总手续费（开仓+平仓）
-      // 映射状态：Gate.io finished -> filled, open -> pending
+      // 映射状态：Binance FILLED -> filled, NEW/PARTIALLY_FILLED -> pending
       const dbStatus = finalOrderStatus === 'finished' ? 'filled' : 'pending';
       
       await dbClient.execute({
@@ -829,4 +829,3 @@ export const cancelOrderTool = createTool({
     }
   },
 });
-

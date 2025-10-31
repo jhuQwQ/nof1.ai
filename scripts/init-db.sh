@@ -39,8 +39,8 @@ if [ ! -f .env ]; then
     echo -e "${RED}❌ 错误: .env 文件不存在${NC}"
     echo ""
     echo "请先创建 .env 文件并配置必要的环境变量："
-    echo "  - GATE_API_KEY"
-    echo "  - GATE_API_SECRET"
+    echo "  - BINANCE_API_KEY"
+    echo "  - BINANCE_API_SECRET"
     echo "  - OPENAI_API_KEY"
     echo "  - INITIAL_BALANCE"
     echo "  - DATABASE_URL"
@@ -57,12 +57,12 @@ source .env
 # 检查必需的环境变量
 MISSING_VARS=()
 
-if [ -z "$GATE_API_KEY" ]; then
-    MISSING_VARS+=("GATE_API_KEY")
+if [ -z "${BINANCE_API_KEY:-$GATE_API_KEY}" ]; then
+    MISSING_VARS+=("BINANCE_API_KEY")
 fi
 
-if [ -z "$GATE_API_SECRET" ]; then
-    MISSING_VARS+=("GATE_API_SECRET")
+if [ -z "${BINANCE_API_SECRET:-$GATE_API_SECRET}" ]; then
+    MISSING_VARS+=("BINANCE_API_SECRET")
 fi
 
 if [ -z "$OPENAI_API_KEY" ]; then
@@ -103,7 +103,8 @@ echo "  配置信息"
 echo "=================================================="
 echo -e "${BLUE}数据库 URL:${NC} $DATABASE_URL"
 echo -e "${BLUE}初始资金:${NC} $INITIAL_BALANCE USDT"
-echo -e "${BLUE}测试网模式:${NC} ${GATE_USE_TESTNET:-false}"
+TESTNET_FLAG="${BINANCE_USE_TESTNET:-$GATE_USE_TESTNET}"
+echo -e "${BLUE}测试网模式:${NC} ${TESTNET_FLAG:-false}"
 echo -e "${BLUE}交易间隔:${NC} ${TRADING_INTERVAL_MINUTES:-5} 分钟"
 echo -e "${BLUE}最大杠杆:${NC} ${MAX_LEVERAGE:-10}x"
 echo ""
@@ -151,4 +152,3 @@ echo "接下来可以运行："
 echo -e "  ${BLUE}npm run trading:start${NC}  - 启动交易系统"
 echo -e "  ${BLUE}npm run dev${NC}            - 开发模式运行"
 echo ""
-

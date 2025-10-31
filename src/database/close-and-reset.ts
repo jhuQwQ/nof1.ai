@@ -227,17 +227,17 @@ async function syncPositions(): Promise<void> {
   const dbUrl = process.env.DATABASE_URL || "file:./.voltagent/trading.db";
   
   try {
-    logger.info("🔄 从 Gate.io 同步持仓...");
+    logger.info("🔄 从 Binance 同步持仓...");
     
     const client = createClient({
       url: dbUrl,
     });
     
-    // 从 Gate.io 获取持仓
+    // 从 Binance 获取持仓
     const positions = await gateClient.getPositions();
     const activePositions = positions.filter((p: any) => Number.parseInt(p.size || "0") !== 0);
     
-    logger.info(`📊 Gate.io 当前持仓数: ${activePositions.length}`);
+    logger.info(`📊 Binance 当前持仓数: ${activePositions.length}`);
     
     // 清空本地持仓表
     await client.execute("DELETE FROM positions");
@@ -322,7 +322,7 @@ async function closeAndReset() {
     logger.info("");
     
     // 步骤3：同步持仓数据
-    logger.info("【步骤 3/3】从 Gate.io 同步持仓数据");
+    logger.info("【步骤 3/3】从 Binance 同步持仓数据");
     logger.info("-".repeat(80));
     await syncPositions();
     logger.info("");
@@ -343,4 +343,3 @@ async function closeAndReset() {
 
 // 执行主函数
 closeAndReset();
-

@@ -115,22 +115,42 @@ echo ""
 if [ ! -f ".env" ]; then
     echo -e "${RED}❌ 未找到 .env 文件${NC}"
     echo "请创建 .env 文件并配置以下变量："
-    echo "  - GATE_API_KEY"
-    echo "  - GATE_API_SECRET"
+    echo "  - BINANCE_API_KEY"
+    echo "  - BINANCE_API_SECRET"
     echo "  - OPENAI_API_KEY"
-    echo "  - GATE_USE_TESTNET=true"
+    echo "  - BINANCE_USE_TESTNET=true"
     exit 1
 fi
 
-# 检查必需的环境变量
-REQUIRED_VARS=("GATE_API_KEY" "GATE_API_SECRET" "OPENAI_API_KEY")
+# 读取并校验环境变量（兼容旧变量名）
+BINANCE_API_KEY_LINE=$(grep '^BINANCE_API_KEY=' .env | head -n1)
+if [ -z "$BINANCE_API_KEY_LINE" ]; then
+    BINANCE_API_KEY_LINE=$(grep '^GATE_API_KEY=' .env | head -n1)
+fi
+BINANCE_API_KEY_VALUE=${BINANCE_API_KEY_LINE#*=}
+
+BINANCE_API_SECRET_LINE=$(grep '^BINANCE_API_SECRET=' .env | head -n1)
+if [ -z "$BINANCE_API_SECRET_LINE" ]; then
+    BINANCE_API_SECRET_LINE=$(grep '^GATE_API_SECRET=' .env | head -n1)
+fi
+BINANCE_API_SECRET_VALUE=${BINANCE_API_SECRET_LINE#*=}
+
+OPENAI_API_KEY_LINE=$(grep '^OPENAI_API_KEY=' .env | head -n1)
+OPENAI_API_KEY_VALUE=${OPENAI_API_KEY_LINE#*=}
+
 MISSING_VARS=()
 
-for var in "${REQUIRED_VARS[@]}"; do
-    if ! grep -q "^${var}=" .env || grep -q "^${var}=$" .env || grep -q "^${var}=你的" .env; then
-        MISSING_VARS+=("$var")
+check_var() {
+    local name=$1
+    local value=$2
+    if [ -z "$value" ] || [[ "$value" == "your_api_key_here" ]] || [[ "$value" == "your_mainnet_api_key" ]] || [[ "$value" == "你的"* ]] || [[ "$value" == "" ]]; then
+        MISSING_VARS+=("$name")
     fi
-done
+}
+
+check_var "BINANCE_API_KEY" "$BINANCE_API_KEY_VALUE"
+check_var "BINANCE_API_SECRET" "$BINANCE_API_SECRET_VALUE"
+check_var "OPENAI_API_KEY" "$OPENAI_API_KEY_VALUE"
 
 if [ ${#MISSING_VARS[@]} -gt 0 ]; then
     echo -e "${RED}❌ 以下环境变量未正确配置：${NC}"
@@ -145,7 +165,11 @@ fi
 echo -e "${GREEN}✓${NC} 配置文件检查通过"
 
 # 检查是否使用测试网
-if grep -q "GATE_USE_TESTNET=true" .env; then
+BINANCE_USE_TESTNET_VALUE=$(grep '^BINANCE_USE_TESTNET=' .env | head -n1)
+if [ -z "$BINANCE_USE_TESTNET_VALUE" ]; then
+    BINANCE_USE_TESTNET_VALUE=$(grep '^GATE_USE_TESTNET=' .env | head -n1)
+fi
+if echo "$BINANCE_USE_TESTNET_VALUE" | grep -q '=true$'; then
     echo -e "${GREEN}✓${NC} 当前配置: 测试网模式（推荐）"
 else
     echo -e "${YELLOW}⚠${NC} 当前配置: 正式网模式"
@@ -160,7 +184,7 @@ npm run db:init
 echo ""
 
 # 步骤 7：同步持仓数据
-echo "🔄 步骤 7/8：从 Gate.io 同步持仓数据..."
+echo "🔄 步骤 7/8：从 Binance 同步持仓数据..."
 echo ""
 
 npm run db:sync-positions
@@ -185,4 +209,3 @@ sleep 2
 
 # 启动系统
 npm run trading:start
-

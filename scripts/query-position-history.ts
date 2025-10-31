@@ -17,7 +17,7 @@
  */
 
 /**
- * 查询 Gate.io 历史仓位记录
+ * 查询 Binance 历史仓位记录（脚本名称保持兼容）
  * 用于输出账号合约的历史仓位记录
  */
 
@@ -92,7 +92,6 @@ async function queryPositionHistory() {
 
 // 执行查询
 queryPositionHistory();
-
 
 
 

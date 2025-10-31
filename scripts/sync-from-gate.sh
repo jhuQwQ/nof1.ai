@@ -17,13 +17,14 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 # =====================================================
-# 从 Gate.io 同步账户并重置数据库
+# 从 Binance Futures 同步账户并重置数据库
+# （脚本文件名保留 gate 以兼容既有流程）
 # =====================================================
 
 set -e
 
 echo "=================================================="
-echo "  从 Gate.io 同步账户资金"
+echo "  从 Binance 同步账户资金"
 echo "=================================================="
 echo ""
 
@@ -45,23 +46,26 @@ echo -e "${GREEN}✅ 找到 .env 文件${NC}"
 # 读取环境变量
 source .env
 
-# 检查 Gate.io API 配置
-if [ -z "$GATE_API_KEY" ] || [ -z "$GATE_API_SECRET" ]; then
-    echo -e "${RED}❌ 错误: 未配置 Gate.io API 密钥${NC}"
+# 检查 Binance API 配置（兼容旧变量）
+API_KEY="${BINANCE_API_KEY:-$GATE_API_KEY}"
+API_SECRET="${BINANCE_API_SECRET:-$GATE_API_SECRET}"
+
+if [ -z "$API_KEY" ] || [ -z "$API_SECRET" ]; then
+    echo -e "${RED}❌ 错误: 未配置 Binance API 密钥${NC}"
     echo ""
     echo "请在 .env 文件中配置："
-    echo "  GATE_API_KEY=your_key"
-    echo "  GATE_API_SECRET=your_secret"
+    echo "  BINANCE_API_KEY=your_key"
+    echo "  BINANCE_API_SECRET=your_secret"
     exit 1
 fi
 
-echo -e "${GREEN}✅ Gate.io API 配置检查通过${NC}"
+echo -e "${GREEN}✅ Binance API 配置检查通过${NC}"
 echo ""
 
 # 显示警告
 echo -e "${YELLOW}⚠️  警告:${NC}"
 echo "   此操作将："
-echo "   1. 从 Gate.io 获取当前账户余额"
+echo "   1. 从 Binance 获取当前账户余额"
 echo "   2. 以该余额作为新的初始资金"
 echo "   3. 重置所有历史数据和收益率统计"
 echo "   4. 同步当前持仓到数据库"
@@ -81,7 +85,7 @@ echo "  开始同步..."
 echo "=================================================="
 echo ""
 
-# 执行同步脚本
+# 执行同步脚本（tsx 内部使用 Binance 客户端）
 npx tsx --env-file=.env ./src/database/sync-from-gate.ts
 
 echo ""
@@ -89,4 +93,3 @@ echo "=================================================="
 echo -e "${GREEN}✅ 同步完成！${NC}"
 echo "=================================================="
 echo ""
-

@@ -4,7 +4,7 @@
 
 [![VoltAgent](https://img.shields.io/badge/Framework-VoltAgent-purple.svg)](https://voltagent.dev)
 [![OpenAI Compatible](https://img.shields.io/badge/AI-OpenAI_Compatible-orange.svg)](https://openrouter.ai)
-[![Gate.io](https://img.shields.io/badge/Exchange-Gate.io-00D4AA.svg)](https://www.gate.io)
+[![Binance](https://img.shields.io/badge/Exchange-Binance-F0B90B.svg)](https://www.binance.com)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Node.js](https://img.shields.io/badge/Runtime-Node.js%2020+-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](./LICENSE)
@@ -18,7 +18,7 @@
 
 open-nof1.ai は、大規模言語モデルの知能と量的取引実践を深く統合した AI 駆動の暗号通貨自動取引システムです。システムは Agent フレームワーク上に構築され、AI に完全な市場分析と取引意思決定の自律権を与えることで、真の知的取引を実現します。
 
-本システムは**最小限の人的介入**という設計思想を採用し、従来のハードコードされた取引ルールを廃止し、AI モデルが生の市場データに基づいて自律的に学習し意思決定できるようにします。システムは Gate.io 取引所（テストネットと本番ネットの両方をサポート）と統合し、BTC、ETH、SOL などの主要な暗号通貨をカバーする完全なパーペチュアル（永久）契約取引機能を提供し、データ収集、インテリジェント分析、リスク管理から取引実行までの全プロセスの自動化をサポートします。
+本システムは**最小限の人的介入**という設計思想を採用し、従来のハードコードされた取引ルールを廃止し、AI モデルが生の市場データに基づいて自律的に学習・意思決定できるようにします。システムは現在 Binance 先物（テストネットと本番ネットの両方をサポート）と統合しており、BTC、ETH、SOL などの主要暗号通貨をカバーする完全なパーペチュアル契約取引機能を提供し、データ収集、インテリジェント分析、リスク管理から取引実行までの全プロセス自動化を実現します。
 
 ![open-nof1.ai](./public/image.png)
 
@@ -56,7 +56,7 @@ open-nof1.ai は、大規模言語モデルの知能と量的取引実践を深�
 └─────────┬───────────────────────────────────┬───────────┘
           │                                   │
 ┌─────────┴──────────┐            ┌───────────┴───────────┐
-│    Trading Tools   │            │   Gate.io API Client  │
+│    Trading Tools   │            │ Binance Futures Client│
 │                    │            │                       │
 │ - Market Data      │◄───────────┤ - Order Management    │
 │ - Account Info     │            │ - Position Query      │
@@ -78,7 +78,7 @@ open-nof1.ai は、大規模言語モデルの知能と量的取引実践を深�
 |---------------|------|------|
 | フレームワーク | [VoltAgent](https://voltagent.dev) | AI Agent オーケストレーションと管理 |
 | AI プロバイダー | OpenAI 互換 API | OpenRouter、OpenAI、DeepSeek などの互換プロバイダーをサポート |
-| 取引所 | [Gate.io](https://www.gate.io) | 暗号通貨取引(テストネット & 本番ネット) |
+| 取引所 | [Binance Futures](https://www.binance.com/ja/futures) | 暗号通貨取引(テストネット & 本番ネット) |
 | データベース | LibSQL (SQLite) | ローカルデータ永続化 |
 | Web サーバー | Hono | 高性能 HTTP フレームワーク |
 | 開発言語 | TypeScript | 型安全な開発 |
@@ -109,7 +109,7 @@ open-nof1.ai は、大規模言語モデルの知能と量的取引実践を深�
 - **レバレッジ範囲**: 1倍から10倍(設定可能)
 - **注文タイプ**: 成行注文、損切り、利確
 - **ポジション方向**: ロングとショート
-- **リアルタイム実行**: Gate.io API によるサブ秒級注文
+- **リアルタイム実行**: Binance Futures API によるサブ秒級注文
 
 ### リアルタイム監視インターフェース
 
@@ -173,10 +173,10 @@ INITIAL_BALANCE=2000            # 初期資金(USDT)
 # データベース
 DATABASE_URL=file:./.voltagent/trading.db
 
-# Gate.io API 認証情報(テストネットを先に使用することをお勧めします!)
-GATE_API_KEY=your_api_key_here
-GATE_API_SECRET=your_api_secret_here
-GATE_USE_TESTNET=true
+# Binance API 認証情報(テストネットの利用を推奨)
+BINANCE_API_KEY=your_api_key_here
+BINANCE_API_SECRET=your_api_secret_here
+BINANCE_USE_TESTNET=true
 
 # AI モデルプロバイダー (OpenAI 互換 API)
 OPENAI_API_KEY=your_api_key_here
@@ -188,8 +188,8 @@ AI_MODEL_NAME=deepseek/deepseek-v3.2-exp      # モデル名
 - OpenRouter: https://openrouter.ai/keys
 - OpenAI: https://platform.openai.com/api-keys
 - DeepSeek: https://platform.deepseek.com/api_keys
-- Gate.io テストネット: https://www.gate.io/testnet
-- Gate.io 本番ネット: https://www.gate.io/myaccount/api_key_manage
+- Binance 先物テストネット: https://testnet.binancefuture.com/ja/futures/BTCUSDT
+- Binance API 管理: https://www.binance.com/ja/my/settings/api-management
 
 ### データベース初期化
 
@@ -224,19 +224,18 @@ open-nof1.ai/
 │   ├── database/
 │   │   ├── init.ts                   # データベース初期化ロジック
 │   │   ├── schema.ts                 # データベーススキーマ定義
-│   │   └── sync-from-gate.ts         # 取引所データ同期
+│   │   └── sync-from-gate.ts         # 取引所データ同期(名称は旧仕様、実体はBinance)
 │   ├── scheduler/
 │   │   └── tradingLoop.ts            # 取引ループオーケストレーション
 │   ├── services/
-│   │   ├── gateClient.ts             # Gate.io API クライアントラッパー
+│   │   ├── binanceClient.ts          # Binance Futures API クライアント
+│   │   ├── gateClient.ts             # 互換レイヤー(Binance クライアントへリダイレクト)
 │   │   └── multiTimeframeAnalysis.ts # マルチタイムフレームデータアグリゲーター
 │   ├── tools/
 │   │   └── trading/                  # VoltAgent ツール実装
 │   │       ├── accountManagement.ts  # アカウント照会と管理
 │   │       ├── marketData.ts         # 市場データ取得
 │   │       └── tradeExecution.ts     # 注文出しと管理
-│   ├── types/
-│   │   └── gate.d.ts                 # TypeScript 型定義
 │   └── utils/
 │       └── timeUtils.ts              # 時間/日付ユーティリティ関数
 ├── public/                           # Web ダッシュボード静的ファイル
@@ -246,7 +245,7 @@ open-nof1.ai/
 ├── scripts/                          # 運用スクリプト
 │   ├── init-db.sh                    # データベース設定スクリプト
 │   ├── kill-port.sh                  # サービス停止スクリプト
-│   └── sync-from-gate.sh             # データ同期スクリプト
+│   └── sync-from-gate.sh             # データ同期スクリプト(名称は旧仕様、実体はBinance)
 ├── .env                              # 環境設定
 ├── .voltagent/                       # データストレージディレクトリ
 │   └── trading.db                    # SQLite データベースファイル
@@ -267,9 +266,9 @@ open-nof1.ai/
 | `MAX_LEVERAGE` | 最大レバレッジ倍率 | 10 | いいえ |
 | `INITIAL_BALANCE` | 初期資金(USDT) | 2000 | いいえ |
 | `DATABASE_URL` | SQLite データベースファイルパス | file:./.voltagent/trading.db | いいえ |
-| `GATE_API_KEY` | Gate.io API キー | - | はい |
-| `GATE_API_SECRET` | Gate.io API シークレット | - | はい |
-| `GATE_USE_TESTNET` | テストネット環境を使用 | true | いいえ |
+| `BINANCE_API_KEY` | Binance API キー | - | はい |
+| `BINANCE_API_SECRET` | Binance API シークレット | - | はい |
+| `BINANCE_USE_TESTNET` | Binance テストネットを使用 | true | いいえ |
 | `OPENAI_API_KEY` | OpenAI 互換 API キー | - | はい |
 | `OPENAI_BASE_URL` | API ベース URL | https://openrouter.ai/api/v1 | いいえ |
 | `AI_MODEL_NAME` | モデル名 | deepseek/deepseek-v3.2-exp | いいえ |
@@ -347,7 +346,7 @@ npm run db:reset
 # データベースステータスを確認
 npm run db:status
 
-# Gate.io からデータを同期
+# Binance からデータを同期（スクリプト名は互換のため旧称のまま）
 npm run db:sync
 
 # ポジションデータを同期
@@ -531,12 +530,12 @@ npm run trading:start
 
 #### API 認証情報が設定されていない
 
-**エラー**: `GATE_API_KEY and GATE_API_SECRET must be set in environment variables`
+**エラー**: `BINANCE_API_KEY and BINANCE_API_SECRET must be set in environment variables`
 
 **解決策**:
 ```bash
 # .env ファイルを確認
-cat .env | grep GATE_API
+cat .env | grep BINANCE_API
 
 # 設定を編集
 nano .env
@@ -648,7 +647,7 @@ SELECT * FROM account_history ORDER BY timestamp DESC LIMIT 10;
 
 ```bash
 # .env で設定
-GATE_USE_TESTNET=true
+BINANCE_USE_TESTNET=true
 ```
 
 テストネットの利点:
@@ -704,9 +703,9 @@ cp .voltagent/trading.db "$backup_dir/trading-$(date +%Y%m%d-%H%M%S).db"
 nano .env
 
 # 3. 設定を更新
-GATE_USE_TESTNET=false
-GATE_API_KEY=your_mainnet_api_key
-GATE_API_SECRET=your_mainnet_api_secret
+BINANCE_USE_TESTNET=false
+BINANCE_API_KEY=your_mainnet_api_key
+BINANCE_API_SECRET=your_mainnet_api_secret
 
 # 4. システムを再起動
 npm run trading:start
@@ -720,8 +719,8 @@ npm run trading:start
 - [OpenRouter モデルカタログ](https://openrouter.ai/models)
 - [OpenAI API リファレンス](https://platform.openai.com/docs/api-reference)
 - [DeepSeek API ドキュメント](https://platform.deepseek.com/api-docs/)
-- [Gate.io API リファレンス](https://www.gate.io/docs/developers/apiv4/)
-- [Gate.io テストネット](https://www.gate.io/testnet)
+- [Binance Futures API リファレンス](https://binance-docs.github.io/apidocs/futures/ja/)
+- [Binance Futures テストネット](https://testnet.binancefuture.com/ja/futures/BTCUSDT)
 
 ## リスク免責事項
 
@@ -812,4 +811,3 @@ Conventional Commits 規約に従います:
 [![Star History Chart](https://api.star-history.com/svg?repos=195440/open-nof1.ai&type=Date)](https://star-history.com/#195440/open-nof1.ai&Date)
 
 </div>
-

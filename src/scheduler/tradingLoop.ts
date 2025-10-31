@@ -179,9 +179,9 @@ async function collectMarketData() {
         logger.warn(`获取 ${symbol} 资金费率失败:`, error as any);
       }
       
-      // 获取未平仓合约（Open Interest）- Gate.io ticker中没有openInterest字段，暂时跳过
+      // 获取未平仓合约（Open Interest）- Binance ticker 暂未提供 openInterest 字段，暂时跳过
       let openInterest = { latest: 0, average: 0 };
-      // Note: Gate.io ticker 数据中没有开放持仓量字段，如需可以使用其他API或外部数据源
+      // Note: Binance ticker 数据中没有开放持仓量字段，如需可以使用其他API或外部数据源
       
       // 将各时间框架指标添加到市场数据
       marketData[symbol] = {
@@ -455,7 +455,7 @@ function calculateIndicators(candles: any[]) {
     };
   }
 
-  // 处理对象格式的K线数据（Gate.io API返回的是对象，不是数组）
+  // 处理对象格式的K线数据（Binance API 返回的是对象，不是数组）
   const closes = candles
     .map((c) => {
       // 如果是对象格式（FuturesCandlestick）
@@ -570,7 +570,7 @@ async function calculateSharpeRatio(): Promise<number> {
 /**
  * 获取账户信息
  * 
- * Gate.io 的 account.total 包含了未实现盈亏
+ * Binance account.total 包含了未实现盈亏
  * 总资产 = total - unrealisedPnl = available + positionMargin
  * 
  * 因此：
@@ -592,12 +592,12 @@ async function getAccountInfo() {
       ? Number.parseFloat(initialResult.rows[0].total_value as string)
       : 100;
     
-    // 从 Gate.io API 返回的数据中提取字段
+    // 从 Binance API 返回的数据中提取字段
     const accountTotal = Number.parseFloat(account.total || "0");
     const availableBalance = Number.parseFloat(account.available || "0");
     const unrealisedPnl = Number.parseFloat(account.unrealisedPnl || "0");
     
-    // Gate.io 的 account.total 包含了未实现盈亏
+    // Binance 的 account.total 包含了未实现盈亏
     // totalBalance 应该不包含未实现盈亏
     const totalBalance = accountTotal - unrealisedPnl;
     
@@ -628,12 +628,12 @@ async function getAccountInfo() {
 }
 
 /**
- * 从 Gate.io 同步持仓到数据库
+ * 从 Binance 同步持仓到数据库（函数名称保留以兼容既有脚本）
  * 🔥 优化：确保持仓数据的准确性和完整性
  * 数据库中的持仓记录主要用于：
  * 1. 保存止损止盈订单ID等元数据
  * 2. 提供历史查询和监控页面展示
- * 实时持仓数据应该直接从 Gate.io 获取
+ * 实时持仓数据应该直接从 Binance 获取
  */
 async function syncPositionsFromGate(cachedPositions?: any[]) {
   const gateClient = createGateClient();
@@ -646,12 +646,12 @@ async function syncPositionsFromGate(cachedPositions?: any[]) {
       dbResult.rows.map((row: any) => [row.symbol, row])
     );
     
-    // 检查 Gate.io 是否有持仓（可能 API 有延迟）
+    // 检查 Binance 是否有持仓（可能 API 有延迟）
     const activeGatePositions = gatePositions.filter((p: any) => Number.parseInt(p.size || "0") !== 0);
     
-    // 如果 Gate.io 返回0个持仓但数据库有持仓，可能是 API 延迟，不清空数据库
+    // 如果 Binance 返回 0 个持仓但数据库有持仓，可能是 API 延迟，不清空数据库
     if (activeGatePositions.length === 0 && dbResult.rows.length > 0) {
-      logger.warn(`⚠️  Gate.io 返回0个持仓，但数据库有 ${dbResult.rows.length} 个持仓，可能是 API 延迟，跳过同步`);
+      logger.warn(`⚠️  Binance 返回0个持仓，但数据库有 ${dbResult.rows.length} 个持仓，可能是 API 延迟，跳过同步`);
       return;
     }
     
@@ -725,7 +725,7 @@ async function syncPositionsFromGate(cachedPositions?: any[]) {
     
     const activeGatePositionsCount = gatePositions.filter((p: any) => Number.parseInt(p.size || "0") !== 0).length;
     if (activeGatePositionsCount > 0 && syncedCount === 0) {
-      logger.error(`Gate.io 有 ${activeGatePositionsCount} 个持仓，但数据库同步失败！`);
+      logger.error(`Binance 有 ${activeGatePositionsCount} 个持仓，但数据库同步失败！`);
     }
     
   } catch (error) {
@@ -734,8 +734,8 @@ async function syncPositionsFromGate(cachedPositions?: any[]) {
 }
 
 /**
- * 获取持仓信息 - 直接从 Gate.io 获取最新数据
- * @param cachedGatePositions 可选，已获取的原始Gate持仓数据，避免重复调用API
+ * 获取持仓信息 - 直接从 Binance 获取最新数据
+ * @param cachedGatePositions 可选，已获取的原始 Binance 持仓数据，避免重复调用 API
  * @returns 格式化后的持仓数据
  */
 async function getPositions(cachedGatePositions?: any[]) {
@@ -761,9 +761,9 @@ async function getPositions(cachedGatePositions?: any[]) {
         // 🔥 优先从数据库读取开仓时间，确保时间准确
         let openedAt = dbOpenedAtMap.get(symbol);
         
-        // 如果数据库中没有，尝试从Gate.io的create_time获取
+        // 如果数据库中没有，尝试从交易所返回的 create_time 获取（Binance）
         if (!openedAt && p.create_time) {
-          // Gate.io的create_time是UNIX时间戳（秒），需要转换为ISO字符串
+          // Binance 的 updateTime 是毫秒时间戳，此处仍兼容 create_time 字段
           if (typeof p.create_time === 'number') {
             openedAt = new Date(p.create_time * 1000).toISOString();
           } else {
@@ -1149,7 +1149,7 @@ async function executeTradingDecision() {
       const dbCount = (dbPositions.rows[0] as any).count;
       
       if (positions.length !== dbCount) {
-        logger.warn(`持仓同步不一致: Gate=${positions.length}, DB=${dbCount}`);
+        logger.warn(`持仓同步不一致: Exchange=${positions.length}, DB=${dbCount}`);
         // 再次同步，使用同一份数据
         await syncPositionsFromGate(rawGatePositions);
       }
@@ -1655,4 +1655,3 @@ export function setTradingStartTime(time: Date) {
 export function setIterationCount(count: number) {
   iterationCount = count;
 }
-

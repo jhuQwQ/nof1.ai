@@ -56,18 +56,20 @@ fi
 echo -e "${GREEN}✅ 找到 .env 文件${NC}"
 echo ""
 
-# 读取环境变量
+# 读取环境变量（兼容旧变量名）
 source .env
+BINANCE_API_KEY=${BINANCE_API_KEY:-$GATE_API_KEY}
+BINANCE_API_SECRET=${BINANCE_API_SECRET:-$GATE_API_SECRET}
 
 # 检查必需的环境变量
 MISSING_VARS=()
 
-if [ -z "$GATE_API_KEY" ]; then
-    MISSING_VARS+=("GATE_API_KEY")
+if [ -z "$BINANCE_API_KEY" ]; then
+    MISSING_VARS+=("BINANCE_API_KEY")
 fi
 
-if [ -z "$GATE_API_SECRET" ]; then
-    MISSING_VARS+=("GATE_API_SECRET")
+if [ -z "$BINANCE_API_SECRET" ]; then
+    MISSING_VARS+=("BINANCE_API_SECRET")
 fi
 
 if [ ${#MISSING_VARS[@]} -gt 0 ]; then
@@ -117,4 +119,3 @@ echo "接下来可以："
 echo -e "  ${BLUE}npm run trading:start${NC}  - 重新启动交易系统"
 echo -e "  ${BLUE}npm run dev${NC}            - 开发模式运行"
 echo ""
-

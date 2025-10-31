@@ -76,9 +76,9 @@ if [ -z "$SKIP_ENV" ]; then
     echo "请输入必需的配置信息："
     echo ""
     
-    # Gate.io API Key
-    read -p "Gate.io API Key: " GATE_API_KEY
-    read -p "Gate.io API Secret: " GATE_API_SECRET
+    # Binance Futures API Key
+    read -p "Binance API Key: " BINANCE_API_KEY
+    read -p "Binance API Secret: " BINANCE_API_SECRET
     
     # OpenAI API Key (支持 OpenRouter 或其他兼容供应商)
     read -p "OpenAI API Key (支持 OpenRouter): " OPENAI_API_KEY
@@ -92,9 +92,9 @@ if [ -z "$SKIP_ENV" ]; then
     # 是否使用测试网
     read -p "使用测试网？[Y/n]: " USE_TESTNET
     if [[ $USE_TESTNET =~ ^[Nn]$ ]]; then
-        GATE_USE_TESTNET="false"
+        BINANCE_USE_TESTNET="false"
     else
-        GATE_USE_TESTNET="true"
+        BINANCE_USE_TESTNET="true"
     fi
     
     # 服务器端口
@@ -133,11 +133,11 @@ INITIAL_BALANCE=$INITIAL_BALANCE
 DATABASE_URL=file:./.voltagent/trading.db
 
 # ============================================
-# Gate.io API 配置
+# Binance API 配置
 # ============================================
-GATE_API_KEY=$GATE_API_KEY
-GATE_API_SECRET=$GATE_API_SECRET
-GATE_USE_TESTNET=$GATE_USE_TESTNET
+BINANCE_API_KEY=$BINANCE_API_KEY
+BINANCE_API_SECRET=$BINANCE_API_SECRET
+BINANCE_USE_TESTNET=$BINANCE_USE_TESTNET
 
 # ============================================
 # AI 模型配置
@@ -188,4 +188,3 @@ echo -e "  ${CYAN}README.md${NC}         - 项目说明"
 echo -e "  ${CYAN}ENV_SETUP.md${NC}      - 环境配置指南"
 echo -e "  ${CYAN}QUICKSTART.md${NC}     - 快速开始"
 echo ""
-

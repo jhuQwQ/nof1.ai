@@ -155,7 +155,7 @@ function calculateIndicators(candles: any[]) {
     };
   }
 
-  // 处理对象格式的K线数据（Gate.io API返回的是对象，不是数组）
+// 处理对象格式的K线数据（Binance API 返回的是对象）
   const closes = candles
     .map((c) => {
       // 如果是对象格式（FuturesCandlestick）
@@ -342,7 +342,7 @@ export const getOpenInterestTool = createTool({
     symbol: z.enum(RISK_PARAMS.TRADING_SYMBOLS).describe("币种代码"),
   }),
   execute: async ({ symbol }) => {
-    // Gate API 需要通过其他方式获取持仓量数据
+    // Binance API 需要通过其他方式获取持仓量数据
     // 暂时返回 0，后续可以通过其他端点获取
     return {
       symbol,
@@ -351,4 +351,3 @@ export const getOpenInterestTool = createTool({
     };
   },
 });
-

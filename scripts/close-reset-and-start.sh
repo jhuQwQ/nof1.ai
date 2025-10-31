@@ -78,20 +78,23 @@ if [ ! -f .env ]; then
     echo -e "${RED}❌ 未找到 .env 文件${NC}"
     echo ""
     echo "请创建 .env 文件并配置以下变量："
-    echo "  - GATE_API_KEY"
-    echo "  - GATE_API_SECRET"
+    echo "  - BINANCE_API_KEY"
+    echo "  - BINANCE_API_SECRET"
     echo "  - OPENAI_API_KEY"
-    echo "  - GATE_USE_TESTNET=true"
+    echo "  - BINANCE_USE_TESTNET=true"
     exit 1
 fi
 
 echo -e "${GREEN}✓${NC} 找到 .env 文件"
 
-# 读取环境变量
+# 读取环境变量并兼容旧变量
 source .env
+BINANCE_API_KEY=${BINANCE_API_KEY:-$GATE_API_KEY}
+BINANCE_API_SECRET=${BINANCE_API_SECRET:-$GATE_API_SECRET}
+BINANCE_USE_TESTNET=${BINANCE_USE_TESTNET:-$GATE_USE_TESTNET}
 
 # 检查必需的环境变量
-REQUIRED_VARS=("GATE_API_KEY" "GATE_API_SECRET" "OPENAI_API_KEY")
+REQUIRED_VARS=("BINANCE_API_KEY" "BINANCE_API_SECRET" "OPENAI_API_KEY")
 MISSING_VARS=()
 
 for var in "${REQUIRED_VARS[@]}"; do
@@ -113,7 +116,7 @@ fi
 echo -e "${GREEN}✓${NC} 环境变量检查通过"
 
 # 检查是否使用测试网
-if grep -q "GATE_USE_TESTNET=true" .env; then
+if [[ "${BINANCE_USE_TESTNET}" == "true" ]]; then
     echo -e "${GREEN}✓${NC} 当前配置: 测试网模式（推荐）"
 else
     echo -e "${YELLOW}⚠${NC} 当前配置: 正式网模式"
@@ -129,7 +132,7 @@ echo "  3. 删除所有历史交易记录"
 echo "  4. 删除所有持仓信息"
 echo "  5. 删除所有账户历史"
 echo "  6. 重新初始化数据库"
-echo "  7. 从 Gate.io 同步持仓数据"
+echo "  7. 从 Binance 同步持仓数据"
 echo "  8. 启动交易系统"
 echo ""
 echo -e "${RED}此操作不可恢复！${NC}"
@@ -210,7 +213,7 @@ echo "⚙️  步骤 5/8：显示当前配置..."
 echo ""
 
 # 检查是否使用测试网
-if grep -q "GATE_USE_TESTNET=true" .env; then
+if [[ "${BINANCE_USE_TESTNET}" == "true" ]]; then
     echo -e "${GREEN}✓${NC} 当前配置: 测试网模式（推荐）"
 else
     echo -e "${YELLOW}⚠${NC} 当前配置: 正式网模式"
@@ -244,7 +247,7 @@ echo -e "${YELLOW}系统已完成以下操作：${NC}"
 echo "  ✓ 已停止所有运行中的进程"
 echo "  ✓ 已平仓所有持仓"
 echo "  ✓ 已重置数据库到初始状态"
-echo "  ✓ 已从 Gate.io 同步持仓数据"
+echo "  ✓ 已从 Binance 同步持仓数据"
 echo ""
 echo -e "${BLUE}即将启动交易系统...${NC}"
 echo ""
@@ -275,4 +278,3 @@ sleep 2
 
 # 启动系统
 npm run trading:start
-

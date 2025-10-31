@@ -43,7 +43,7 @@ async function recordAccountAssets() {
   try {
     const gateClient = createGateClient();
     
-    // Get account information from Gate.io
+    // Get account information from Binance
     const account = await gateClient.getFuturesAccount();
     
     // Extract account data
@@ -116,4 +116,3 @@ export function startAccountRecorder() {
   
   logger.info(`Account recorder scheduled: ${cronExpression}`);
 }
-

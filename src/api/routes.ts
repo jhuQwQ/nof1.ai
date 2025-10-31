@@ -43,7 +43,7 @@ export function createApiRoutes() {
   /**
    * 获取账户总览
    * 
-   * Gate.io 账户结构：
+   * Binance 账户结构：
    * - account.total = available + positionMargin + unrealisedPnl
    * - account.total 包含未实现盈亏
    * 
@@ -67,7 +67,7 @@ export function createApiRoutes() {
         ? Number.parseFloat(initialResult.rows[0].total_value as string)
         : 100;
       
-      // Gate.io 的 account.total 包含了未实现盈亏
+      // Binance 的 account.total 包含了未实现盈亏
       // 总资产 = total - unrealisedPnl = available + positionMargin
       const unrealisedPnl = Number.parseFloat(account.unrealisedPnl || "0");
       const totalBalance = Number.parseFloat(account.total || "0") - unrealisedPnl;
@@ -91,7 +91,7 @@ export function createApiRoutes() {
   });
 
   /**
-   * 获取当前持仓 - 从 Gate.io 获取实时数据
+   * 获取当前持仓 - 从 Binance 获取实时数据
    */
   app.get("/api/positions", async (c) => {
     try {
@@ -115,7 +115,7 @@ export function createApiRoutes() {
           const quantity = Math.abs(size);
           const leverage = Number.parseInt(p.leverage || "1");
           
-          // 开仓价值（保证金）: 从Gate.io API直接获取
+          // 开仓价值（保证金）: 从 Binance API 直接获取
           const openValue = Number.parseFloat(p.margin || "0");
           
           return {
@@ -333,4 +333,3 @@ export function createApiRoutes() {
 
   return app;
 }
-

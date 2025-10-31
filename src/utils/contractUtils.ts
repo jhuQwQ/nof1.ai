@@ -19,7 +19,7 @@
 /**
  * 合约工具函数
  */
-import { createGateClient } from "../services/gateClient";
+import { createBinanceClient } from "../services/binanceClient";
 import { createPinoLogger } from "@voltagent/logger";
 
 const logger = createPinoLogger({
@@ -31,26 +31,27 @@ const logger = createPinoLogger({
 const quantoMultiplierCache = new Map<string, number>();
 
 /**
- * 默认合约乘数映射
- * 从 Gate.io API 获取失败时使用
+ * 默认合约步长映射
+ * 从 Binance API 获取失败时使用
  */
 const DEFAULT_MULTIPLIERS: Record<string, number> = {
-  'BTC': 0.0001,  // 1张 = 0.0001 BTC
-  'ETH': 0.01,    // 1张 = 0.01 ETH
-  'SOL': 1,       // 1张 = 1 SOL
-  'XRP': 10,      // 1张 = 10 XRP
-  'BNB': 0.001,   // 1张 = 0.001 BNB (修复：原来错误地配置为0.01)
-  'BCH': 0.01,    // 1张 = 0.01 BCH
-  'POL': 1,       // 1张 = 1 POL
+  BTC: 0.001,   // Binance Futures: stepSize = 0.001 BTC
+  ETH: 0.01,    // stepSize = 0.01 ETH
+  SOL: 0.1,     // stepSize = 0.1 SOL
+  XRP: 1,       // stepSize = 1 XRP
+  BNB: 0.01,    // stepSize = 0.01 BNB
+  BCH: 0.01,    // stepSize = 0.01 BCH
+  DOGE: 100,    // stepSize = 100 DOGE
+  ADA: 1,       // stepSize = 1 ADA
 };
 
 /**
  * 获取合约乘数（quanto multiplier）
- * 
+ *
  * 合约乘数表示：1张合约代表多少个币
- * 例如：BTC_USDT合约，1张 = 0.0001 BTC
- * 
- * 优先从 Gate.io API 获取，失败时使用默认值
+ * 在 Binance Futures 中，"张数"定义为步长数量：数量 = 张数 * stepSize
+ *
+ * 优先从 Binance API 获取，失败时使用默认值
  * 支持缓存以减少API调用次数
  * 
  * @param contract 合约名称，如 "BTC_USDT"
@@ -69,9 +70,11 @@ export async function getQuantoMultiplier(
   }
   
   try {
-    const client = createGateClient();
+    const client = createBinanceClient();
     const contractInfo = await client.getContractInfo(contract);
-    const multiplier = Number.parseFloat(contractInfo.quantoMultiplier || "0");
+    const multiplier = Number.parseFloat(
+      (contractInfo as any).quantoMultiplier ?? contractInfo.stepSize ?? "0"
+    );
     
     // 验证乘数有效性
     if (!Number.isFinite(multiplier) || multiplier <= 0) {
@@ -131,4 +134,3 @@ export async function preloadQuantoMultipliers(contracts: string[]): Promise<voi
   const successCount = results.filter(r => r.status === 'fulfilled').length;
   logger.info(`成功预加载 ${successCount}/${contracts.length} 个合约乘数`);
 }
-
