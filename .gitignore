@@ -69,3 +69,4 @@ Thumbs.db
 *.temp
 .cache/
 .specstory
+.env.example
